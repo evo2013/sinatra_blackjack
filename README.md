@@ -1,2 +1,2 @@
 # sinatra_blackjack
-Blackjack game built on Sinatra framework. Human player versus machine dealer.
+Blackjack game built on Sinatra framework. Human player versus machine dealer. Includes game play instructions.
