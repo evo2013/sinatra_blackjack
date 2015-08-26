@@ -6,7 +6,7 @@ use Rack::Session::Cookie, :key => 'rack.session',
                            :path => '/',
                            :secret => '2jcuyte9lp'
 
-BLACKJACT_AMOUNT = 21
+BLACKJACK_AMOUNT = 21
 DEALER_MIN = 17
 
 helpers do
@@ -24,10 +24,10 @@ helpers do
 
     #correct for Aces
     arr.select{|e| e == "A"}.count.times do
-      break if total <= BLACKJACT_AMOUNT
+      break if total <= BLACKJACK_AMOUNT
         total -= 10
       end
-      total
+    total
   end
 
   def card_image(card) ['H', '3']
@@ -74,15 +74,18 @@ get '/set_name' do
 end
 
 post '/set_name' do
-  if params[:player_name].empty? || params[:bet].empty?
-    @error = "Both name and bet amount are required fields."
+  if params[:player_name].empty? 
+    @error = "Name is required."
     halt erb(:set_name)
+  elsif params[:bet].nil? || params[:bet].to_i <= 0 
+    @error = "Bet amount is required and must be a number greater than zero."
+    halt erb(:set_name)
+  else 
+    session[:player_name] = params[:player_name]
+    session[:bet] = params[:bet].to_i.round
+    session[:player_total] = params[:player_total]
+    redirect '/game'
   end
-
-  session[:player_name] = params[:player_name]
-  session[:bet] = params[:bet]
-  session[:player_total] = params[:player_total]
-  redirect '/game'
 end
 
 get '/game' do
@@ -93,35 +96,48 @@ get '/game' do
 
   session[:dealer_cards] = []
   session[:player_cards] = []
-  session[:dealer_cards] << session[:deck].pop
-  session[:dealer_cards] << session[:deck].pop
-  session[:player_cards] << session[:deck].pop
-  session[:player_cards] << session[:deck].pop
-
-erb :game
-end
-
-post '/game/player/hit' do
-  session[:player_cards] << session[:deck].pop
+  2.times do 
+     session[:dealer_cards] << session[:deck].pop
+     session[:player_cards] << session[:deck].pop
+  end
 
   player_total = calculate_total(session[:player_cards])
-  if player_total == BLACKJACT_AMOUNT
+  dealer_total = calculate_total(session[:dealer_cards])
+  if player_total == BLACKJACK_AMOUNT
     @replay = true
     @success = "Congratulations, you just hit Blackjack!"
     @show_hit_or_stay_buttons = false
-  elsif player_total > BLACKJACT_AMOUNT
+  elsif dealer_total == BLACKJACK_AMOUNT
     @replay = true
-    @error = "Sorry, you just busted at #{player_total}!"
+    @error = "Sorry, you lose! Dealer just hit Blackjack."
     @show_hit_or_stay_buttons = false
   end
 
   erb :game
 end
 
+post '/game/player/hit' do
+  session[:player_cards] << session[:deck].pop
+
+  player_total = calculate_total(session[:player_cards])
+  if player_total == BLACKJACK_AMOUNT
+    @replay = true
+    @success = "Congratulations, you just hit Blackjack!"
+    @show_hit_or_stay_buttons = false
+  elsif player_total > BLACKJACK_AMOUNT
+    @replay = true
+    @error = "Sorry, you just busted at #{player_total}!"
+    @show_hit_or_stay_buttons = false
+  end
+
+
+  erb :game
+end
+
 post '/game/player/stay' do
-   @success = "#{session[:player_name]} has decided to stay."
-   @show_hit_or_stay_buttons = false
-   redirect '/game/dealer'
+  @success = "#{session[:player_name]} has decided to stay."
+  @show_hit_or_stay_buttons = false
+  redirect '/game/dealer'
 end
 
 get '/game/dealer' do
@@ -129,10 +145,10 @@ get '/game/dealer' do
   @show_hit_or_stay_buttons = false
 
   dealer_total = calculate_total(session[:dealer_cards])
-  if dealer_total == BLACKJACT_AMOUNT
+  if dealer_total == BLACKJACK_AMOUNT
     @replay = true
     @error = "Sorry, you lose! Dealer just hit Blackjack."
-  elsif dealer_total > BLACKJACT_AMOUNT
+  elsif dealer_total > BLACKJACK_AMOUNT
     @replay = true
     @success = "Congratulations, you win! Dealer just busted at #{dealer_total}!"
   elsif dealer_total >= DEALER_MIN

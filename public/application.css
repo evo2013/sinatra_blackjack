@@ -9,7 +9,7 @@ body {
 
 .trim {
   width: 550px;
-  height: 360px;
+  height: 400px;
   padding-top: 60px;
   background-color: #9CBA7F;
 }
@@ -82,6 +82,25 @@ form#stay {
   background-image: none;
   font-size: 18px;
   font-weight: bold;
+}
+
+#spacer {
+  margin-top: 350; 
+  margin-left: 80;
+  width: 350px;
+  height: 70px;
+}
+
+form#facebook {
+  margin-left: 15px;
+  margin-top: 20px;
+  float: left;
+  margin-right: 10px;
+}
+
+form#twitter {
+  margin-top: 20px;
+  float: left;
 }
 
 .navbar .nav > li > a {
